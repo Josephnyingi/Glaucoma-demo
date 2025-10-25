@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glaucoma Bayesian Network — Clinical Decision Support</title>
+    <style>
+        /* === CLEAN DESIGN SYSTEM === */
+        :root {
+            /* Colors */
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            
+            /* Neutrals */
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            /* Typography */
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            
+            /* Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-12: 3rem;
+            --space-16: 4rem;
+            --space-20: 5rem;
+            --space-24: 6rem;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            
+            /* Border radius */
+            --radius-sm: 0.25rem;
+            --radius: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        /* === RESET & BASE === */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            color: var(--gray-800);
+            background: var(--white);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* === TYPOGRAPHY === */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            line-height: 1.25;
+            color: var(--gray-900);
+        }
+
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 2rem; }
+        h3 { font-size: 1.5rem; }
+        h4 { font-size: 1.25rem; }
+
+        p {
+            margin-bottom: var(--space-4);
+            color: var(--gray-600);
+        }
+
+        /* === LAYOUT === */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        .section {
+            padding: var(--space-20) 0;
+        }
+
+        .section--hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            text-align: center;
+        }
+
+        .section--light {
+            background: var(--gray-50);
+        }
+
+        /* === HERO SECTION === */
+        .hero {
+            padding: var(--space-24) 0;
+        }
+
+        .hero__title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: var(--space-6);
+            color: var(--white);
+        }
+
+        .hero__subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* === CONTENT SECTIONS === */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-16);
+            align-items: center;
+        }
+
+        .content__title {
+            text-align: center;
+            margin-bottom: var(--space-16);
+            font-size: 2.5rem;
+        }
+
+        .content__text {
+            font-size: 1.125rem;
+        }
+
+        .content__text strong {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+
+        /* === STATS GRID === */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-6);
+            margin: var(--space-12) 0;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: var(--space-8);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+        }
+
+        .stat-card__number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--danger);
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-card__label {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* === FEATURES GRID === */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-6);
+            margin: var(--space-12) 0;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: var(--space-8);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+        }
+
+        .feature-card__icon {
+            font-size: 2rem;
+            margin-bottom: var(--space-4);
+        }
+
+        .feature-card__title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+            color: var(--gray-900);
+        }
+
+        .feature-card__desc {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        /* === FLOW DIAGRAM === */
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-4);
+            margin: var(--space-12) 0;
+            flex-wrap: wrap;
+        }
+
+        .flow__step {
+            background: var(--primary);
+            color: var(--white);
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--radius-xl);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .flow__arrow {
+            color: var(--gray-400);
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        /* === VISUALIZATION SECTION === */
+        .viz-section {
+            background: var(--gray-100);
+            padding: var(--space-20) 0;
+        }
+
+        .viz-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        .viz-header {
+            text-align: center;
+            margin-bottom: var(--space-16);
+        }
+
+        .viz-header__title {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-4);
+            color: var(--gray-900);
+        }
+
+        .viz-header__desc {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .viz-canvas {
+            width: 100%;
+            height: 80vh;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* === CONTROLS === */
+        .controls {
+            position: absolute;
+            bottom: var(--space-6);
+            left: var(--space-6);
+            display: flex;
+            gap: var(--space-2);
+            z-index: 100;
+        }
+
+        .btn {
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+            color: var(--gray-700);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* === LEGEND === */
+        .legend {
+            position: absolute;
+            bottom: var(--space-6);
+            right: var(--space-6);
+            background: var(--white);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            z-index: 100;
+        }
+
+        .legend__title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: var(--space-3);
+            color: var(--gray-900);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: var(--space-2) 0;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: var(--radius-sm);
+            margin-right: var(--space-2);
+        }
+
+        /* === NODES === */
+        .node {
+            position: absolute;
+            width: 100px;
+            height: 60px;
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            border: 2px solid transparent;
+            font-size: 0.75rem;
+        }
+
+        .node:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+
+        .node.selected {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .node--root { background: var(--accent); color: var(--white); }
+        .node--intermediate { background: var(--primary); color: var(--white); }
+        .node--outcome { background: var(--danger); color: var(--white); }
+        .node--decision { background: var(--warning); color: var(--gray-900); }
+
+        .node__label {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+            text-align: center;
+        }
+
+        .node__timescale {
+            font-size: 0.625rem;
+            opacity: 0.8;
+            text-align: center;
+        }
+
+        /* === LINKS === */
+        .link {
+            position: absolute;
+            height: 2px;
+            background: var(--gray-400);
+            transform-origin: left center;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .link:hover {
+            opacity: 1;
+            background: var(--primary);
+        }
+
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 6px solid var(--gray-400);
+            border-top: 3px solid transparent;
+            border-bottom: 3px solid transparent;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+
+        .arrow:hover {
+            border-left-color: var(--primary);
+            opacity: 1;
+        }
+
+        /* === LOADING === */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--white);
+            padding: var(--space-6) var(--space-8);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            z-index: 1000;
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .hero__title { font-size: 2.5rem; }
+            .content-grid { grid-template-columns: 1fr; gap: var(--space-8); }
+            .stats-grid { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr; }
+            .flow { flex-direction: column; gap: var(--space-2); }
+            .flow__arrow { transform: rotate(90deg); }
+            .viz-canvas { height: 60vh; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 0 var(--space-4); }
+            .section { padding: var(--space-12) 0; }
+            .hero { padding: var(--space-16) 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="section section--hero">
+        <div class="container">
+            <div class="hero">
+                <h1 class="hero__title">Glaucoma Bayesian Network</h1>
+                <p class="hero__subtitle">Clinical Decision Support for Predicting Vision Loss</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="content__title">Glaucoma: Silent Cause of Blindness</h2>
+            <div class="content-grid">
+                <div class="content__text">
+                    <p>Glaucoma is the leading cause of irreversible blindness in Japan among adults 40+.</p>
+                    <p>Caused by optic nerve damage from high intraocular pressure (IOP — the fluid pressure inside the eye).</p>
+                    <p>Progresses silently until late stages.</p>
+                    <p><strong>Early prediction is key to preventing permanent vision loss.</strong></p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card__number">Leading</div>
+                        <div class="stat-card__label">cause of irreversible blindness</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card__number">Silent</div>
+                        <div class="stat-card__label">progression until late stages</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card__number">Early</div>
+                        <div class="stat-card__label">prediction is key</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Section -->
+    <section class="section section--light">
+        <div class="container">
+            <h2 class="content__title">Model for Predicting Glaucoma Progression</h2>
+            <div class="content-grid">
+                <div class="content__text">
+                    <p><strong>Structure:</strong> Age → IOP → Optic Nerve Damage → Visual Field Loss.</p>
+                    <p>Captures causal links between risk factors and vision loss.</p>
+                    <p>Populated with hospital data (age, IOP readings, imaging, vision tests) and expert priors.</p>
+                    <p><strong>Estimates the probability of vision loss within 12 months to support clinical decisions.</strong></p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-card__icon">🔗</div>
+                        <div class="feature-card__title">Causal Structure</div>
+                        <div class="feature-card__desc">Age → IOP → Optic Nerve → Vision Loss</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card__icon">📊</div>
+                        <div class="feature-card__title">Hospital Data</div>
+                        <div class="feature-card__desc">Age, IOP readings, imaging, vision tests</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card__icon">🧠</div>
+                        <div class="feature-card__title">Expert Priors</div>
+                        <div class="feature-card__desc">Clinical knowledge integration</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card__icon">⏰</div>
+                        <div class="feature-card__title">12-Month Prediction</div>
+                        <div class="feature-card__desc">Probability of vision loss</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flow">
+                <div class="flow__step">Age</div>
+                <div class="flow__arrow">→</div>
+                <div class="flow__step">IOP</div>
+                <div class="flow__arrow">→</div>
+                <div class="flow__step">Optic Nerve</div>
+                <div class="flow__arrow">→</div>
+                <div class="flow__step">Vision Loss</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Visualization -->
+    <section class="viz-section">
+        <div class="viz-container">
+            <div class="viz-header">
+                <h2 class="viz-header__title">Interactive Model</h2>
+                <p class="viz-header__desc">Click on nodes to explore detailed information about each component in the Bayesian Network</p>
+            </div>
+            
+            <div class="viz-canvas" id="graph2d">
+                <div class="loading" id="loading">Loading Interactive Visualization...</div>
+                
+                <div class="controls">
+                    <button class="btn" id="resetLayout">Reset</button>
+                    <button class="btn" id="toggleLabels">Labels</button>
+                    <button class="btn" id="toggleLinks">Links</button>
+                    <button class="btn" id="screenshot">Screenshot</button>
+                    <button class="btn" id="fullscreen">Fullscreen</button>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend__title">Node Types</div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--accent);"></div>
+                        Risk Factors
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--primary);"></div>
+                        Eye Pressure
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--danger);"></div>
+                        Vision Loss
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--warning);"></div>
+                        Treatment Decision
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // === CLEAN DATA STRUCTURE ===
+        const NETWORK_DATA = {
+            nodes: [
+                { 
+                    id: "Age", 
+                    label: "Age", 
+                    type: "chance", 
+                    group: "root",
+                    definition: "Patient age - older patients have higher risk",
+                    timescale: "Lifetime",
+                    position: { x: 100, y: 200 }
+                },
+                { 
+                    id: "Family_History", 
+                    label: "Family History", 
+                    type: "chance", 
+                    group: "root",
+                    definition: "Family member with glaucoma",
+                    timescale: "Lifetime",
+                    position: { x: 100, y: 400 }
+                },
+                { 
+                    id: "IOP", 
+                    label: "Eye Pressure", 
+                    type: "chance", 
+                    group: "intermediate",
+                    definition: "Intraocular pressure - main risk factor",
+                    timescale: "Measured at visits",
+                    position: { x: 300, y: 300 }
+                },
+                { 
+                    id: "Visual_Field_Loss", 
+                    label: "Vision Loss", 
+                    type: "chance", 
+                    group: "outcome",
+                    definition: "Loss of peripheral vision",
+                    timescale: "12 months",
+                    position: { x: 500, y: 300 }
+                },
+                { 
+                    id: "Treatment", 
+                    label: "Treatment", 
+                    type: "decision", 
+                    group: "decision",
+                    definition: "Treatment choice",
+                    timescale: "Immediate",
+                    options: ["Monitor", "Eye Drops", "Surgery"],
+                    position: { x: 300, y: 100 }
+                }
+            ],
+            links: [
+                { source: "Age", target: "IOP", strength: "moderate" },
+                { source: "Family_History", target: "IOP", strength: "moderate" },
+                { source: "IOP", target: "Visual_Field_Loss", strength: "strong" },
+                { source: "Treatment", target: "Visual_Field_Loss", strength: "strong" },
+                { source: "Age", target: "Treatment", strength: "moderate" },
+                { source: "IOP", target: "Treatment", strength: "strong" }
+            ]
+        };
+
+        // === CLEAN STATE MANAGEMENT ===
+        const state = {
+            showLabels: true,
+            showLinks: true,
+            selectedNode: null
+        };
+
+        // === CLEAN VISUALIZATION CLASS ===
+        class GlaucomaVisualization {
+            constructor() {
+                this.container = document.getElementById('graph2d');
+                this.nodeElements = new Map();
+                this.linkElements = [];
+                this.init();
+            }
+            
+            init() {
+                this.createNodes();
+                this.createLinks();
+                this.setupEventListeners();
+                this.hideLoading();
+            }
+            
+            createNodes() {
+                NETWORK_DATA.nodes.forEach(nodeData => {
+                    const nodeElement = document.createElement('div');
+                    nodeElement.className = `node node--${nodeData.group}`;
+                    nodeElement.style.left = `${nodeData.position.x}px`;
+                    nodeElement.style.top = `${nodeData.position.y}px`;
+                    
+                    const labelElement = document.createElement('div');
+                    labelElement.className = 'node__label';
+                    labelElement.textContent = nodeData.label;
+                    
+                    const timescaleElement = document.createElement('div');
+                    timescaleElement.className = 'node__timescale';
+                    timescaleElement.textContent = nodeData.timescale;
+                    
+                    nodeElement.appendChild(labelElement);
+                    nodeElement.appendChild(timescaleElement);
+                    
+                    nodeElement.addEventListener('click', () => this.selectNode(nodeData));
+                    nodeElement.addEventListener('mouseenter', () => nodeElement.style.transform = 'scale(1.05)');
+                    nodeElement.addEventListener('mouseleave', () => {
+                        if (state.selectedNode !== nodeData) {
+                            nodeElement.style.transform = 'scale(1)';
+                        }
+                    });
+                    
+                    this.container.appendChild(nodeElement);
+                    this.nodeElements.set(nodeData.id, nodeElement);
+                });
+            }
+            
+            createLinks() {
+                NETWORK_DATA.links.forEach(linkData => {
+                    const sourceNode = NETWORK_DATA.nodes.find(n => n.id === linkData.source);
+                    const targetNode = NETWORK_DATA.nodes.find(n => n.id === linkData.target);
+                    
+                    if (sourceNode && targetNode) {
+                        const linkElement = document.createElement('div');
+                        linkElement.className = 'link';
+                        
+                        const arrowElement = document.createElement('div');
+                        arrowElement.className = 'arrow';
+                        
+                        this.updateLinkPosition(linkElement, arrowElement, sourceNode, targetNode);
+                        
+                        this.container.appendChild(linkElement);
+                        this.container.appendChild(arrowElement);
+                        
+                        this.linkElements.push({ link: linkElement, arrow: arrowElement, data: linkData });
+                    }
+                });
+            }
+            
+            updateLinkPosition(linkElement, arrowElement, sourceNode, targetNode) {
+                const sourceX = sourceNode.position.x + 50;
+                const sourceY = sourceNode.position.y + 30;
+                const targetX = targetNode.position.x + 50;
+                const targetY = targetNode.position.y + 30;
+                
+                const dx = targetX - sourceX;
+                const dy = targetY - sourceY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                linkElement.style.left = `${sourceX}px`;
+                linkElement.style.top = `${sourceY}px`;
+                linkElement.style.width = `${distance}px`;
+                linkElement.style.transform = `rotate(${angle}deg)`;
+                
+                arrowElement.style.left = `${targetX - 6}px`;
+                arrowElement.style.top = `${targetY - 3}px`;
+                arrowElement.style.transform = `rotate(${angle}deg)`;
+            }
+            
+            selectNode(nodeData) {
+                if (state.selectedNode) {
+                    const prevElement = this.nodeElements.get(state.selectedNode.id);
+                    if (prevElement) prevElement.classList.remove('selected');
+                }
+                
+                state.selectedNode = nodeData;
+                const nodeElement = this.nodeElements.get(nodeData.id);
+                if (nodeElement) nodeElement.classList.add('selected');
+                
+                this.showNodeInfo(nodeData);
+            }
+            
+            showNodeInfo(nodeData) {
+                // Simple alert for now - can be enhanced with modal
+                alert(`${nodeData.label}\n\n${nodeData.definition}\n\nTimescale: ${nodeData.timescale}`);
+            }
+            
+            resetLayout() {
+                NETWORK_DATA.nodes.forEach(nodeData => {
+                    const nodeElement = this.nodeElements.get(nodeData.id);
+                    if (nodeElement) {
+                        nodeElement.style.transition = 'all 0.5s ease';
+                        nodeElement.style.left = `${nodeData.position.x}px`;
+                        nodeElement.style.top = `${nodeData.position.y}px`;
+                        nodeElement.style.transform = 'scale(1)';
+                    }
+                });
+                
+                setTimeout(() => {
+                    this.linkElements.forEach(({ link, arrow, data }) => {
+                        const sourceNode = NETWORK_DATA.nodes.find(n => n.id === data.source);
+                        const targetNode = NETWORK_DATA.nodes.find(n => n.id === data.target);
+                        this.updateLinkPosition(link, arrow, sourceNode, targetNode);
+                    });
+                }, 100);
+            }
+            
+            toggleLabels() {
+                state.showLabels = !state.showLabels;
+                this.nodeElements.forEach(element => {
+                    const timescaleElement = element.querySelector('.node__timescale');
+                    if (timescaleElement) {
+                        timescaleElement.style.display = state.showLabels ? 'block' : 'none';
+                    }
+                });
+            }
+            
+            toggleLinks() {
+                state.showLinks = !state.showLinks;
+                this.linkElements.forEach(({ link, arrow }) => {
+                    link.style.display = state.showLinks ? 'block' : 'none';
+                    arrow.style.display = state.showLinks ? 'block' : 'none';
+                });
+            }
+            
+            takeScreenshot() {
+                // Simple implementation
+                window.print();
+            }
+            
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+            
+            setupEventListeners() {
+                document.getElementById('resetLayout').addEventListener('click', () => this.resetLayout());
+                document.getElementById('toggleLabels').addEventListener('click', () => this.toggleLabels());
+                document.getElementById('toggleLinks').addEventListener('click', () => this.toggleLinks());
+                document.getElementById('screenshot').addEventListener('click', () => this.takeScreenshot());
+                document.getElementById('fullscreen').addEventListener('click', () => this.toggleFullscreen());
+            }
+            
+            hideLoading() {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // === INITIALIZATION ===
+        document.addEventListener('DOMContentLoaded', () => {
+            new GlaucomaVisualization();
+        });
+    </script>
+</body>
+</html>
