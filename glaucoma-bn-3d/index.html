@@ -509,63 +509,29 @@
             border-color: #ffffff;
         }
 
-        .arrow {
-            position: absolute;
-            width: 0;
-            height: 0;
-            border-left: 24px solid #0f766e;
-            border-top: 12px solid transparent;
-            border-bottom: 12px solid transparent;
-            opacity: 1;
-            transition: all 0.3s ease;
-            filter: drop-shadow(4px 4px 8px rgba(15, 118, 110, 0.6));
-            z-index: 11;
-            pointer-events: none;
-            border-left-color: #0f766e;
-        }
+        /* Removed large arrows - keeping only small green ones */
 
-        .arrow:hover {
-            border-left-color: #14b8a6;
-            opacity: 1;
-            border-left-width: 28px;
-            border-top-width: 14px;
-            border-bottom-width: 14px;
-            filter: drop-shadow(6px 6px 12px rgba(15, 118, 110, 0.8));
-        }
-
-        /* Enhanced arrow visibility with pulsing animation */
-        .arrow {
-            animation: arrowPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes arrowPulse {
-            0% {
-                filter: drop-shadow(4px 4px 8px rgba(15, 118, 110, 0.6));
-                transform: scale(1);
-            }
-            50% {
-                filter: drop-shadow(6px 6px 12px rgba(15, 118, 110, 0.8));
-                transform: scale(1.05);
-            }
-            100% {
-                filter: drop-shadow(4px 4px 8px rgba(15, 118, 110, 0.6));
-                transform: scale(1);
-            }
-        }
-
-        /* Add flow direction indicators */
+        /* Small green directional arrows */
         .link::after {
             content: '';
             position: absolute;
-            right: -8px;
+            right: -10px;
             top: 50%;
             transform: translateY(-50%);
             width: 0;
             height: 0;
-            border-left: 8px solid #0f766e;
-            border-top: 4px solid transparent;
-            border-bottom: 4px solid transparent;
-            opacity: 0.8;
+            border-left: 10px solid #22c55e;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            opacity: 1;
+            filter: drop-shadow(2px 2px 4px rgba(34, 197, 94, 0.6));
+            transition: all 0.3s ease;
+        }
+        
+        .link:hover::after {
+            border-left-color: #16a34a;
+            filter: drop-shadow(3px 3px 6px rgba(34, 197, 94, 0.8));
+            transform: translateY(-50%) scale(1.1);
         }
 
         /* === LOADING === */
@@ -1334,7 +1300,7 @@
                         🟩 Utility Nodes
         </div>
         <div class="legend-item">
-                        <div class="legend-color" style="background: #0f766e; width: 20px; height: 4px; border-radius: 2px;"></div>
+                        <div class="legend-color" style="background: #22c55e; width: 20px; height: 4px; border-radius: 2px;"></div>
                         ➡️ Directional Flow
         </div>
         </div>
@@ -1716,17 +1682,12 @@
                         linkElement.style.display = 'block'; // Ensure visibility
                         linkElement.style.zIndex = '10'; // Ensure above other elements
                         
-                        const arrowElement = document.createElement('div');
-                        arrowElement.className = 'arrow';
-                        arrowElement.style.display = 'block'; // Ensure visibility
-                        arrowElement.style.zIndex = '11'; // Ensure above other elements
-                        
-                        this.updateLinkPosition(linkElement, arrowElement, sourceNode, targetNode);
+                        // Using only small green arrows via CSS ::after pseudo-element
+                        this.updateLinkPosition(linkElement, null, sourceNode, targetNode);
                         
                         this.container.appendChild(linkElement);
-                        this.container.appendChild(arrowElement);
                         
-                        this.linkElements.push({ link: linkElement, arrow: arrowElement, data: linkData });
+                        this.linkElements.push({ link: linkElement, arrow: null, data: linkData });
                         
                         console.log(`Created link: ${linkData.source} → ${linkData.target}`); // Debug log
                     }
@@ -1773,16 +1734,8 @@
                 linkElement.style.display = 'block';
                 linkElement.style.visibility = 'visible';
                 
-                // Position the arrow at the exact end of the link line
-                // Adjust arrow position to be centered on the link end
-                const arrowOffsetX = Math.cos(angle * Math.PI / 180) * 10; // 10px offset along the link direction
-                const arrowOffsetY = Math.sin(angle * Math.PI / 180) * 10;
-                
-                arrowElement.style.left = `${linkEndX - arrowOffsetX - 20}px`;
-                arrowElement.style.top = `${linkEndY - arrowOffsetY - 10}px`;
-                arrowElement.style.transform = `rotate(${angle}deg)`;
-                arrowElement.style.display = 'block';
-                arrowElement.style.visibility = 'visible';
+                // Small green arrows are now handled by CSS ::after pseudo-element
+                // No need to position separate arrow elements
                 
                 console.log('Link positioned:', linkElement.style.cssText);
                 console.log('Arrow positioned:', arrowElement.style.cssText);
@@ -1878,9 +1831,8 @@
                 this.linkElements.forEach(({ link, arrow }) => {
                     const displayValue = state.showLinks ? 'block' : 'none';
                     link.style.display = displayValue;
-                    arrow.style.display = displayValue;
                     link.style.visibility = state.showLinks ? 'visible' : 'hidden';
-                    arrow.style.visibility = state.showLinks ? 'visible' : 'hidden';
+                    // Arrows are now handled by CSS ::after pseudo-element
                 });
             }
             
