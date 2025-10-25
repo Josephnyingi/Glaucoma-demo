@@ -443,6 +443,7 @@
             background: #3b82f6; /* Blue */
             color: var(--white);
             border-radius: var(--radius-md); /* Rectangle */
+            z-index: 1;
         }
 
         /* 🟧 Orange rectangles = Decision nodes */
@@ -450,6 +451,7 @@
             background: #f97316; /* Orange */
             color: var(--white);
             border-radius: var(--radius-md); /* Rectangle */
+            z-index: 1;
         }
 
         /* 🟩 Green diamonds = Utility nodes */
@@ -457,6 +459,7 @@
             background: #22c55e; /* Green */
             color: var(--white);
             clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* Diamond shape */
+            z-index: 1;
             width: 80px;
             height: 80px;
             display: flex;
@@ -490,15 +493,17 @@
         .link {
             position: absolute;
             height: 8px;
-            background: #000000;
+            background: #000000 !important;
             transform-origin: left center;
-            opacity: 1;
+            opacity: 1 !important;
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             border-radius: 4px;
-            z-index: 10;
+            z-index: 5 !important;
             pointer-events: none;
             border: 1px solid #333333;
+            display: block !important;
+            visibility: visible !important;
         }
 
         .link:hover {
@@ -1678,6 +1683,8 @@
                         this.linkElements.push({ link: linkElement, arrow: null, data: linkData });
                         
                         console.log(`Created link: ${linkData.source} → ${linkData.target}`); // Debug log
+                        console.log('Link element:', linkElement);
+                        console.log('Link styles:', linkElement.style.cssText);
                     }
                 });
             }
@@ -1726,6 +1733,7 @@
                 // No need to position separate arrow elements
                 
                 console.log('Link positioned:', linkElement.style.cssText);
+                console.log('Link computed styles:', window.getComputedStyle(linkElement));
                 console.log('Arrow positioned:', arrowElement.style.cssText);
             }
             
