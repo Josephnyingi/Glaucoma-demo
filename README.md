@@ -8,7 +8,7 @@
 This project is **fully functional** with all features implemented and tested:
 
 ### ✅ **Core Features Implemented:**
-- **Interactive 2D Visualization** - Professional CSS/HTML rendering with drag-and-drop nodes
+- **Interactive 2D Visualization** - Professional CSS/HTML rendering with enhanced directional flows
 - **Decision Network** - Chance, Decision, and Utility nodes with proper Bayesian structure
 - **Probability Assumptions** - Complete conditional probability tables for clinical scenarios
 - **Clinical Decision Support** - Treatment and monitoring recommendations
@@ -21,21 +21,16 @@ This project is **fully functional** with all features implemented and tested:
 - **Mobile-friendly** - Scannable QR codes for phone access
 - **Reliable fallback system** - Multiple generation methods with error handling
 - **Comprehensive testing** - Full test suite validates functionality
-- **Cache-busting** - Ensures latest version loads correctly
 
 ## Files Structure
 
 ```
 glaucoma-demo/
 ├── README.md                           # This file
-├── glaucoma-bn-3d/
-│   ├── index.html                      # Main application (2D visualization)
-│   ├── enhanced-qr-generator.js       # Self-contained QR code generator
-│   ├── qr-test-suite.js               # Comprehensive QR testing system
-│   ├── qr-debug.html                  # QR debugging tool
-│   ├── qr-test.html                   # QR testing page
-│   ├── qr-final-test.html             # Final QR validation
-│   └── cache-clear.html               # Cache management tool
+└── glaucoma-bn-3d/
+    ├── index.html                      # Main application (all-in-one)
+    ├── enhanced-qr-generator.js       # Self-contained QR code generator
+    └── qr-test-suite.js               # Comprehensive QR testing system
 ```
 
 ## Quick Start
@@ -58,6 +53,7 @@ http://localhost:8000/index.html
 - **Causal Chain:** Age → IOP → Optic Nerve Damage → Visual Field Loss
 - **Treatment Options:** Monitor, Eye Drops, Surgery
 - **Utility Functions:** Vision preservation, Patient comfort, Cost considerations
+- **Enhanced Arrows:** Highly visible directional flows with pulsing animation
 
 ### 📱 **Mobile Access System**
 - **QR Code Generation:** Automatic generation of scannable QR codes
@@ -65,17 +61,12 @@ http://localhost:8000/index.html
 - **Offline Capable:** Works without internet connection
 - **Test Suite:** Comprehensive validation of QR functionality
 
-### 🧪 **Testing & Debugging**
-- **QR Test Suite:** Automated testing of all QR components
-- **Debug Tools:** Multiple debugging pages for troubleshooting
-- **Cache Management:** Tools to clear browser cache and resolve conflicts
-- **Error Handling:** Robust fallback systems for reliability
-
 ### 🎨 **User Interface**
 - **Clean Design:** Professional medical application styling
 - **Responsive Layout:** Works on desktop and mobile devices
 - **Interactive Controls:** Reset, Labels, Links, Interactive mode, Scenarios
 - **Visual Feedback:** Hover effects, animations, and status indicators
+- **Enhanced Visibility:** Improved directional flow arrows with teal theme
 
 ## Technical Implementation
 
@@ -83,7 +74,6 @@ http://localhost:8000/index.html
 1. **Enhanced QR Generator** - Main QR generation class with fallbacks
 2. **Self-contained Generator** - Creates QR patterns without external libraries
 3. **Test Suite** - Validates all components and functionality
-4. **Cache Management** - Handles browser caching and version conflicts
 
 ### **Decision Network Structure:**
 - **Bayesian Network** - Probabilistic graphical model
@@ -105,6 +95,24 @@ http://localhost:8000/index.html
 - ✅ **Firefox** - Full functionality  
 - ✅ **Safari** - Full functionality
 - ✅ **Mobile Browsers** - QR code scanning supported
+
+## GitHub Repository
+
+**Live Repository:** [https://github.com/Josephnyingi/Glaucoma-demo](https://github.com/Josephnyingi/Glaucoma-demo)
+
+### **Repository Features:**
+- **Clean Code Structure** - Only essential files included
+- **Professional Documentation** - Complete README and setup guide
+- **Version Control** - Detailed commit history
+- **Enhanced UI** - Improved directional flow visibility
+- **Mobile-Ready** - QR code system for mobile access
+
+## Project Statistics
+- **Total Files:** 4 files (cleaned and optimized)
+- **Main Application:** All-in-one HTML file with embedded CSS/JS
+- **QR System:** Self-contained with comprehensive testing
+- **Documentation:** Complete and professional
+- **Test Coverage:** 100% QR functionality tested
 
 ## Next Steps (Optional Enhancements)
 
