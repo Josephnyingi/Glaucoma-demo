@@ -1,0 +1,2123 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glaucoma Bayesian Network — Clinical Decision Support</title>
+    <!-- QR Code Libraries - Enhanced approach with fallbacks -->
+    <script src="enhanced-qr-generator.js?v=3"></script>
+    <script src="qr-test-suite.js?v=3"></script>
+    <style>
+        /* === CLEAN DESIGN SYSTEM === */
+        :root {
+            /* Colors - Ophthalmology Focused Teal Theme */
+            --primary: #0f766e;        /* Teal - eye-friendly, health-focused */
+            --primary-dark: #0d5f5a;  /* Darker teal */
+            --secondary: #6b7280;     /* Neutral gray */
+            --accent: #2563eb;        /* Trust blue */
+            --success: #059669;       /* Health green */
+            --warning: #d97706;       /* Warning orange */
+            --danger: #dc2626;        /* Critical red */
+            
+            /* Neutrals */
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            /* Typography */
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            
+            /* Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-12: 3rem;
+            --space-16: 4rem;
+            --space-20: 5rem;
+            --space-24: 6rem;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            
+            /* Border radius */
+            --radius-sm: 0.25rem;
+            --radius: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        /* === RESET & BASE === */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            color: var(--gray-800);
+            background: var(--white);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* === TYPOGRAPHY === */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            line-height: 1.25;
+            color: var(--gray-900);
+        }
+
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 2rem; }
+        h3 { font-size: 1.5rem; }
+        h4 { font-size: 1.25rem; }
+
+        p {
+            margin-bottom: var(--space-4);
+            color: var(--gray-600);
+        }
+
+        /* === LAYOUT === */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        .section {
+            padding: var(--space-20) 0;
+        }
+
+        .section--hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            text-align: center;
+        }
+
+        .section--light {
+            background: var(--gray-50);
+        }
+
+        /* === HERO SECTION === */
+        .hero {
+            padding: var(--space-24) 0;
+        }
+
+        .hero__title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: var(--space-6);
+            color: var(--white);
+        }
+
+        .hero__subtitle {
+            font-size: 1.25rem;
+            opacity: 1;
+            color: var(--white);
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 400;
+        }
+
+        /* === CONTENT SECTIONS === */
+        .problem-content,
+        .model-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .problem-text,
+        .model-text {
+            font-size: 1.125rem;
+            line-height: 1.7;
+            margin-bottom: var(--space-12);
+        }
+
+        .problem-text p,
+        .model-text p {
+            margin-bottom: var(--space-4);
+        }
+
+        .problem-text strong,
+        .model-text strong {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+
+        .content__title {
+            text-align: center;
+            margin-bottom: var(--space-12);
+            font-size: 2.5rem;
+        }
+
+        /* === STATS GRID === */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-6);
+            margin: var(--space-12) 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+            padding: var(--space-8);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            border: 2px solid var(--primary);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+            border-color: var(--primary-dark);
+        }
+
+        .stat-card__number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: var(--space-3);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-card__label {
+            color: var(--gray-700);
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-card__reference {
+            color: var(--gray-500);
+            font-size: 0.75rem;
+            font-style: italic;
+            border-top: 1px solid var(--gray-200);
+            padding-top: var(--space-2);
+        }
+
+        .stat-highlight {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            padding: var(--space-4) var(--space-6);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            margin: var(--space-8) 0;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-highlight__title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-highlight__desc {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* === FEATURES GRID === */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-6);
+            margin: var(--space-12) 0;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: var(--space-8);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+        }
+
+        .feature-card__icon {
+            font-size: 2rem;
+            margin-bottom: var(--space-4);
+        }
+
+        .feature-card__title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+            color: var(--gray-900);
+        }
+
+        .feature-card__desc {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        /* === FLOW DIAGRAM === */
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-4);
+            margin: var(--space-12) 0;
+            flex-wrap: wrap;
+        }
+
+        .flow__step {
+            background: var(--primary);
+            color: var(--white);
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--radius-xl);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .flow__arrow {
+            color: var(--gray-400);
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        /* === VISUALIZATION SECTION === */
+        .viz-section {
+            background: var(--gray-100);
+            padding: var(--space-20) 0;
+        }
+
+        .viz-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        .viz-header {
+            text-align: center;
+            margin-bottom: var(--space-16);
+        }
+
+        .viz-header__title {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-4);
+            color: var(--gray-900);
+        }
+
+        .viz-header__desc {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .viz-canvas {
+            width: 100%;
+            height: 90vh;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: visible; /* Changed from hidden to visible for links */
+            min-height: 800px;
+        }
+
+        /* === CONTROLS === */
+        .controls {
+            position: absolute;
+            bottom: var(--space-6);
+            left: var(--space-6);
+            display: flex;
+            gap: var(--space-2);
+            z-index: 100;
+        }
+
+        .btn {
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+            color: var(--gray-700);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* === LEGEND === */
+        .legend {
+            position: absolute;
+            bottom: var(--space-6);
+            right: var(--space-6);
+            background: var(--white);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            z-index: 100;
+        }
+
+        .legend__title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: var(--space-3);
+            color: var(--gray-900);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: var(--space-2) 0;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: var(--radius-sm);
+            margin-right: var(--space-2);
+        }
+
+        /* === NODES === */
+        .node {
+            position: absolute;
+            width: 100px;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            border: 2px solid transparent;
+            font-size: 0.75rem;
+        }
+
+        .node:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+
+        .node.selected {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        /* 🩵 Blue rectangles = Chance nodes */
+        .node--root,
+        .node--intermediate,
+        .node--outcome {
+            background: #3b82f6; /* Blue */
+            color: var(--white);
+            border-radius: var(--radius-md); /* Rectangle */
+            z-index: 1;
+        }
+
+        /* 🟧 Orange rectangles = Decision nodes */
+        .node--decision {
+            background: #f97316; /* Orange */
+            color: var(--white);
+            border-radius: var(--radius-md); /* Rectangle */
+            z-index: 1;
+        }
+
+        /* 🟩 Green diamonds = Utility nodes */
+        .node--utility {
+            background: #22c55e; /* Green */
+            color: var(--white);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* Diamond shape */
+            z-index: 1;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .node--utility .node__label,
+        .node--utility .node__timescale {
+            transform: none; /* No rotation needed with clip-path */
+        }
+
+        .node__label {
+            font-weight: 700;
+            margin-bottom: var(--space-1);
+            text-align: center;
+            font-size: 1rem;
+            color: var(--white);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .node__timescale {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            text-align: center;
+            color: var(--white);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* === DIRECTIONAL FLOWS === */
+        .link {
+            position: absolute;
+            height: 4px;
+            background: #333333;
+            transform-origin: left center;
+            opacity: 1;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            border-radius: 2px;
+            z-index: 5;
+            pointer-events: none;
+            border: none;
+            display: block;
+            visibility: visible;
+        }
+
+        .link:hover {
+            opacity: 1;
+            background: #555555;
+            height: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Removed large arrows - keeping only small green ones */
+
+        /* Larger dark directional arrows */
+        .link::after {
+            content: '';
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 12px solid #333333;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            opacity: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .link:hover::after {
+            border-left-color: #555555;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* === LOADING === */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--white);
+            padding: var(--space-6) var(--space-8);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            z-index: 1000;
+            animation: fadeOut 0.5s ease-in-out 1.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+        
+        /* QR Code Section */
+        .qr-section {
+            background: var(--gray-50);
+            padding: var(--space-6) 0;
+            text-align: center;
+        }
+        
+        .qr-container {
+            display: inline-block;
+            background: var(--white);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto var(--space-3);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            display: block;
+        }
+        
+        .qr-text {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            margin-bottom: var(--space-2);
+        }
+        
+        .qr-url {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--primary);
+            word-break: break-all;
+        }
+        
+        /* Touch Interactions */
+        .node {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .node:active {
+            transform: scale(0.95);
+        }
+        
+        .node.touched {
+            animation: pulse 0.3s ease;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .hero__title { font-size: 2.5rem; }
+            .content-grid { grid-template-columns: 1fr; gap: var(--space-8); }
+            .stats-grid { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr; }
+            .flow { flex-direction: column; gap: var(--space-2); }
+            .flow__arrow { transform: rotate(90deg); }
+            .viz-canvas { height: 60vh; }
+            
+            /* Mobile BN Controls */
+        .controls {
+                flex-direction: column; 
+                gap: var(--space-2);
+            position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--white);
+                padding: var(--space-3);
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+            
+            /* Touch-friendly nodes */
+            .node {
+                min-width: 80px;
+                min-height: 50px;
+                font-size: 0.9rem;
+                padding: var(--space-2);
+            }
+            
+            /* Mobile legend */
+            .legend {
+                position: fixed;
+                top: 0;
+                right: 0;
+                background: var(--white);
+                padding: var(--space-2);
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                z-index: 1000;
+                max-width: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 0 var(--space-4); }
+            .section { padding: var(--space-12) 0; }
+            .hero { padding: var(--space-16) 0; }
+        }
+
+        /* === CONTROLS === */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .control-btn:hover {
+            background: var(--accent-teal);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .control-btn.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            z-index: 100;
+        }
+
+        .legend h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+
+        /* === NODES AND LINKS === */
+        .node {
+            position: absolute;
+            width: 120px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            border: 2px solid transparent;
+        }
+
+        .node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .node.selected {
+            border-color: var(--accent-blue);
+            transform: scale(1.05);
+        }
+
+        .node-label {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .node-timescale {
+            font-size: 10px;
+            opacity: 0.8;
+            text-align: center;
+        }
+
+        .node.root {
+            background: var(--accent-teal);
+            color: white;
+        }
+
+        .node.intermediate {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .node.outcome {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .node.decision {
+            background: var(--accent-yellow);
+            color: var(--text-primary);
+        }
+
+        /* Removed duplicate link definition - using main directional flows above */
+
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 16px solid #2c3e50;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            opacity: 1;
+            transition: all 0.3s ease;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.9));
+            z-index: 11;
+            pointer-events: none;
+        }
+
+        .arrow:hover {
+            border-left-color: #34495e;
+            opacity: 1;
+            border-left-width: 20px;
+            border-top-width: 10px;
+            border-bottom-width: 10px;
+        }
+
+        .node-info {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            max-width: 300px;
+            z-index: 100;
+            display: none;
+        }
+
+        .node-info h3 {
+            margin: 0 0 12px 0;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .node-info p {
+            margin: 8px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .node-info .probabilities {
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .node-info .probabilities h4 {
+            margin: 0 0 8px 0;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .node-info .probabilities ul {
+            margin: 0;
+            padding-left: 16px;
+        }
+
+        .node-info .probabilities li {
+            margin: 4px 0;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .node-info .decision {
+            background: var(--accent-yellow);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .node-info .decision h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+        }
+
+        .node-info .decision ul {
+            margin: 0;
+            padding-left: 16px;
+        }
+
+        .node-info .decision li {
+            margin: 4px 0;
+            color: var(--text-primary);
+            font-size: 12px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* === INTERACTIVE PANEL === */
+        .interactive-panel {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: var(--white);
+            padding: var(--space-6);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            max-width: 350px;
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            color: var(--gray-900);
+            font-size: 1.125rem;
+        }
+
+        .close-panel {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-500);
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-panel:hover {
+            color: var(--gray-700);
+        }
+
+        .control-section {
+            margin-bottom: var(--space-6);
+        }
+
+        .control-section h4 {
+            margin: 0 0 var(--space-3) 0;
+            color: var(--gray-800);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .slider-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .slider-group label {
+            display: block;
+            margin-bottom: var(--space-2);
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--gray-200);
+            outline: none;
+            -webkit-appearance: none;
+            margin-bottom: var(--space-2);
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: none;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .slider-value {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--white);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .treatment-buttons {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        .treatment-btn {
+            flex: 1;
+            background: var(--gray-100);
+            border: 1px solid var(--gray-300);
+            color: var(--gray-700);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .treatment-btn:hover {
+            background: var(--gray-200);
+            border-color: var(--gray-400);
+        }
+
+        .treatment-btn.active {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        .outcome-display {
+            background: var(--gray-50);
+            padding: var(--space-4);
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-200);
+        }
+
+        .outcome-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-2);
+        }
+
+        .outcome-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .outcome-label {
+            color: var(--gray-700);
+            font-size: 0.875rem;
+        }
+
+        .outcome-value {
+            background: var(--success);
+            color: var(--white);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        /* === SCENARIO MODAL === */
+        .scenario-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            margin: var(--space-4);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-6);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--gray-900);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-500);
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scenario-grid {
+            padding: var(--space-6);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .scenario-card {
+            background: var(--gray-50);
+            padding: var(--space-4);
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-200);
+        }
+
+        .scenario-card h4 {
+            margin: 0 0 var(--space-3) 0;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+        }
+
+        .scenario-stats {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+
+        .scenario-stats div {
+            margin-bottom: var(--space-1);
+        }
+
+        /* === RESPONSIVE DESIGN === */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .section-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .implementation-flow {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+            
+            #graph2d {
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="section section--hero">
+        <div class="container">
+            <div class="hero">
+                <h1 class="hero__title">Glaucoma Bayesian Network</h1>
+                <p class="hero__subtitle">Clinical Decision Support for Predicting Vision Loss</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="section">
+        <div class="container">
+            <div class="problem-content">
+                <h2 class="content__title">Glaucoma: Silent Cause of Blindness</h2>
+                <div class="problem-text">
+                    <p>Glaucoma is the leading cause of irreversible blindness in Japan among adults 40+.</p>
+                    <p>Caused by optic nerve damage from high intraocular pressure (IOP — the fluid pressure inside the eye).</p>
+                    <p>Progresses silently until late stages.</p>
+                    <p><strong>Early prediction is key to prevention.</strong></p>
+    </div>
+                <div class="stat-highlight">
+                    <div class="stat-highlight__title">3% of adults over 40 affected globally</div>
+                    <div class="stat-highlight__desc">Glaucoma prevalence increases with age, affecting 1 in 33 adults worldwide</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Section -->
+    <section class="section section--light">
+        <div class="container">
+            <div class="model-content">
+                <h2 class="content__title">Model for Predicting Glaucoma Progression</h2>
+                <div class="model-text">
+                    <p><strong>Structure:</strong> Age → IOP → Optic Nerve Damage → Visual Field Loss.</p>
+                    <p>Captures causal links between risk factors and vision loss.</p>
+                    <p>Populated with hospital data (age, IOP readings, imaging, vision tests) and expert priors.</p>
+                    <p><strong>Estimates the probability of vision loss within 12 months to support clinical decisions.</strong></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Visualization -->
+    <section class="viz-section">
+        <div class="viz-container">
+            <div class="viz-header">
+                <h2 class="viz-header__title">Interactive Model</h2>
+                <p class="viz-header__desc">Click on nodes to explore detailed information about each component in the Bayesian Network</p>
+            </div>
+            
+            <div class="viz-canvas" id="graph2d">
+                <div class="loading" id="loading">Loading Interactive Visualization...</div>
+    
+    <div class="controls">
+                    <button class="btn" id="resetLayout">Reset</button>
+                    <button class="btn" id="toggleLabels">Labels</button>
+                    <button class="btn" id="toggleLinks">Links</button>
+                    <button class="btn" id="interactiveMode">Interactive</button>
+                    <button class="btn" id="scenarioMode">Scenarios</button>
+                    <button class="btn" id="screenshot">Screenshot</button>
+                    <button class="btn" id="fullscreen">Fullscreen</button>
+    </div>
+    
+    <div class="legend">
+                    <div class="legend__title">Node Types</div>
+        <div class="legend-item">
+                        <div class="legend-color" style="background: #3b82f6;"></div>
+                        🩵 Chance Nodes
+        </div>
+        <div class="legend-item">
+                        <div class="legend-color" style="background: #f97316;"></div>
+                        🟧 Decision Nodes
+        </div>
+        <div class="legend-item">
+                        <div class="legend-color" style="background: #22c55e; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);"></div>
+                        🟩 Utility Nodes
+        </div>
+        <div class="legend-item">
+                        <div class="legend-color" style="background: #333333; width: 20px; height: 4px; border-radius: 2px;"></div>
+                        ➡️ Directional Flow
+        </div>
+        </div>
+    </div>
+    
+    <!-- Interactive Control Panel -->
+    <div class="interactive-panel" id="interactivePanel" style="display: none;">
+        <div class="panel-header">
+            <h3>Interactive Model Controls</h3>
+            <button class="close-panel" id="closePanel">×</button>
+        </div>
+        
+        <div class="control-section">
+            <h4>Patient Parameters</h4>
+            <div class="slider-group">
+                <label for="ageSlider">Age Risk Factor:</label>
+                <input type="range" id="ageSlider" min="0" max="100" value="30" class="slider">
+                <span class="slider-value" id="ageValue">30%</span>
+            </div>
+            
+            <div class="slider-group">
+                <label for="iopSlider">IOP Level:</label>
+                <input type="range" id="iopSlider" min="0" max="100" value="40" class="slider">
+                <span class="slider-value" id="iopValue">40%</span>
+            </div>
+        </div>
+        
+        <div class="control-section">
+            <h4>Treatment Options</h4>
+            <div class="treatment-buttons">
+                <button class="treatment-btn" data-treatment="monitor">Monitor</button>
+                <button class="treatment-btn active" data-treatment="drops">Eye Drops</button>
+                <button class="treatment-btn" data-treatment="surgery">Surgery</button>
+            </div>
+        </div>
+        
+        <div class="control-section">
+            <h4>Predicted Outcomes</h4>
+            <div class="outcome-display">
+                <div class="outcome-item">
+                    <span class="outcome-label">Vision Loss Risk:</span>
+                    <span class="outcome-value" id="visionLossRisk">15%</span>
+                </div>
+                <div class="outcome-item">
+                    <span class="outcome-label">Treatment Success:</span>
+                    <span class="outcome-value" id="treatmentSuccess">80%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-section">
+            <h4>Scenario Comparison</h4>
+            <button class="btn" id="saveScenario">Save Current</button>
+            <button class="btn" id="compareScenarios">Compare</button>
+        </div>
+    </div>
+    
+    <!-- Scenario Comparison Modal -->
+    <div class="scenario-modal" id="scenarioModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Scenario Comparison</h3>
+                <button class="close-modal" id="closeModal">×</button>
+            </div>
+            <div class="scenario-grid" id="scenarioGrid">
+                <!-- Scenarios will be populated here -->
+            </div>
+        </div>
+    </div>
+    </div>
+    </section>
+
+    <!-- QR Code Section for Mobile Access -->
+    <section class="qr-section">
+        <div class="container">
+            <h2 class="content__title">Scan to Interact on Mobile</h2>
+            <div class="qr-container">
+                <canvas class="qr-code" id="qrCode" width="200" height="200"></canvas>
+                <div class="qr-text">Scan with your phone to explore the interactive model</div>
+                <div class="qr-url" id="qrUrl">Loading...</div>
+                <div style="margin-top: 10px;">
+                    <button id="retryQR" style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Retry QR Code</button>
+                    <button id="testQR" style="padding: 8px 16px; background: var(--secondary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 8px;">Test QR</button>
+                </div>
+    </div>
+        </div>
+    </section>
+
+    <script>
+        // === CONFIGURATION ===
+        const CONFIG = {
+            colors: {
+                root: "#4ecdc4",          // Teal - Root causes
+                intermediate: "#45b7d1",  // Blue - Intermediate variables
+                outcome: "#eb4d4b",      // Red - Final outcome
+                decision: "#f9ca24",     // Yellow - Decision nodes
+                utility: "#6c5ce7"      // Purple - Utility nodes
+            }
+        };
+
+        // === UPDATED BAYESIAN NETWORK STRUCTURE ===
+        const NETWORK_DATA = {
+            nodes: [
+                // === DECISION NODES (Top) ===
+                { 
+                    id: "Treatment", 
+                    label: "Treatment", 
+                    type: "decision", 
+                    group: "decision",
+                    definition: "Initial treatment choice",
+                    timescale: "Immediate",
+                    options: ["Monitor", "Eye Drops", "Surgery"],
+                    position: { x: 200, y: 150 }
+                },
+                { 
+                    id: "Follow_up", 
+                    label: "Follow-up", 
+                    type: "decision", 
+                    group: "decision",
+                    definition: "Follow-up monitoring strategy",
+                    timescale: "3-6 months",
+                    options: ["Regular", "Intensive", "Minimal"],
+                    position: { x: 500, y: 150 }
+                },
+                
+                // === MAIN CAUSAL CHAIN (Center) ===
+                { 
+                    id: "Age", 
+                    label: "Age", 
+                    type: "chance", 
+                    group: "root",
+                    definition: "Patient age - older patients have higher risk",
+                    timescale: "Lifetime",
+                    probability: 0.3,
+                    position: { x: 100, y: 300 }
+                },
+                { 
+                    id: "IOP", 
+                    label: "IOP", 
+                    type: "chance", 
+                    group: "intermediate",
+                    definition: "Intraocular pressure - main risk factor",
+                    timescale: "Measured at visits",
+                    probability: 0.4,
+                    position: { x: 300, y: 300 }
+                },
+                { 
+                    id: "Optic_Nerve_Damage", 
+                    label: "Optic Nerve Damage", 
+                    type: "chance", 
+                    group: "intermediate",
+                    definition: "Damage to optic nerve from pressure",
+                    timescale: "Progressive",
+                    probability: 0.25,
+                    position: { x: 500, y: 300 }
+                },
+                { 
+                    id: "Visual_Field_Loss", 
+                    label: "Visual Field Loss", 
+                    type: "chance", 
+                    group: "outcome",
+                    definition: "Loss of peripheral vision",
+                    timescale: "12 months",
+                    probability: 0.15,
+                    position: { x: 700, y: 300 }
+                },
+                
+                // === UTILITY NODES (Bottom) ===
+                { 
+                    id: "U_Vision", 
+                    label: "U Vision", 
+                    type: "utility", 
+                    group: "utility",
+                    definition: "Utility based on vision preservation",
+                    timescale: "Long-term",
+                    utility: 0.8,
+                    position: { x: 900, y: 300 }
+                },
+                { 
+                    id: "U_Comfort", 
+                    label: "U Comfort", 
+                    type: "utility", 
+                    group: "utility",
+                    definition: "Patient comfort and quality of life",
+                    timescale: "Ongoing",
+                    utility: 0.6,
+                    position: { x: 500, y: 500 }
+                },
+                { 
+                    id: "U_Cost", 
+                    label: "U Cost", 
+                    type: "utility", 
+                    group: "utility",
+                    definition: "Treatment cost and resource utilization",
+                    timescale: "Total",
+                    utility: 0.4,
+                    position: { x: 700, y: 500 }
+                },
+                { 
+                    id: "Total_Utility", 
+                    label: "Total Utility", 
+                    type: "utility", 
+                    group: "utility",
+                    definition: "Overall decision utility",
+                    timescale: "Final",
+                    utility: 0.6,
+                    position: { x: 600, y: 700 }
+                }
+            ],
+            links: [
+                // === DECISION INFLUENCES ===
+                { source: "Treatment", target: "IOP", strength: "moderate" },
+                { source: "Follow_up", target: "Visual_Field_Loss", strength: "moderate" },
+                
+                // === MAIN CAUSAL CHAIN ===
+                { source: "Age", target: "IOP", strength: "strong" },
+                { source: "IOP", target: "Optic_Nerve_Damage", strength: "strong" },
+                { source: "Optic_Nerve_Damage", target: "Visual_Field_Loss", strength: "strong" },
+                { source: "Visual_Field_Loss", target: "U_Vision", strength: "strong" },
+                
+                // === UTILITY CONNECTIONS ===
+                { source: "Visual_Field_Loss", target: "U_Comfort", strength: "moderate" },
+                { source: "Visual_Field_Loss", target: "U_Cost", strength: "moderate" },
+                { source: "U_Comfort", target: "Total_Utility", strength: "moderate" },
+                { source: "U_Cost", target: "Total_Utility", strength: "moderate" }
+            ]
+        };
+
+        // === STATE MANAGEMENT ===
+        const state = {
+            showLabels: true,
+            showLinks: true,
+            selectedNode: null,
+            isDragging: false,
+            dragOffset: { x: 0, y: 0 },
+            isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+            touchStartPos: { x: 0, y: 0 },
+            interactiveMode: false,
+            currentScenario: {
+                ageRisk: 30,
+                iopLevel: 40,
+                treatment: 'drops',
+                visionLossRisk: 15,
+                treatmentSuccess: 80
+            },
+            savedScenarios: []
+        };
+
+        // === SIMPLIFIED PROBABILITY MODEL ===
+        const PROBABILITY_MODEL = {
+            Age: {
+                description: "Patient age groups",
+                probabilities: {
+                    "Young (<50)": 0.30,
+                    "Middle (50-70)": 0.50,
+                    "Old (>70)": 0.20
+                }
+            },
+            Family_History: {
+                description: "Family history of glaucoma",
+                probabilities: {
+                    "No": 0.80,
+                    "Yes": 0.20
+                }
+            },
+            IOP: {
+                description: "Eye pressure based on risk factors",
+                parents: ["Age", "Family_History"],
+                probabilities: {
+                    "Normal": {
+                        "Young_No": 0.90, "Young_Yes": 0.75,
+                        "Middle_No": 0.80, "Middle_Yes": 0.60,
+                        "Old_No": 0.70, "Old_Yes": 0.50
+                    },
+                    "High": {
+                        "Young_No": 0.10, "Young_Yes": 0.25,
+                        "Middle_No": 0.20, "Middle_Yes": 0.40,
+                        "Old_No": 0.30, "Old_Yes": 0.50
+                    }
+                }
+            },
+            Visual_Field_Loss: {
+                description: "Vision loss based on pressure and treatment",
+                parents: ["IOP", "Treatment"],
+                probabilities: {
+                    "No Loss": {
+                        "Normal_Monitor": 0.95, "Normal_Eye Drops": 0.98, "Normal_Surgery": 0.99,
+                        "High_Monitor": 0.60, "High_Eye Drops": 0.80, "High_Surgery": 0.90
+                    },
+                    "Vision Loss": {
+                        "Normal_Monitor": 0.05, "Normal_Eye Drops": 0.02, "Normal_Surgery": 0.01,
+                        "High_Monitor": 0.40, "High_Eye Drops": 0.20, "High_Surgery": 0.10
+                    }
+                }
+            },
+            Treatment: {
+                description: "Treatment options",
+                type: "decision",
+                options: ["Monitor", "Eye Drops", "Surgery"]
+            }
+        };
+
+        // === MAIN APPLICATION ===
+        class GlaucomaVisualization {
+            constructor() {
+                this.container = document.getElementById('graph2d');
+                this.nodeElements = new Map();
+                this.linkElements = [];
+                
+                // Check if container exists
+                if (!this.container) {
+                    console.error('Container #graph2d not found');
+                    return;
+                }
+                
+                this.init();
+            }
+            
+            init() {
+                try {
+                    this.createNodes();
+                    this.createLinks();
+                    this.setupEventListeners();
+                    
+                    // Hide loading immediately after successful initialization
+                    this.hideLoading();
+                } catch (error) {
+                    console.error('Error initializing visualization:', error);
+                    // Still hide loading even if there's an error
+                    this.hideLoading();
+                }
+            }
+            
+            createNodes() {
+                NETWORK_DATA.nodes.forEach(nodeData => {
+                    const nodeElement = document.createElement('div');
+                    nodeElement.className = `node node--${nodeData.group}`;
+                    nodeElement.style.left = `${nodeData.position.x}px`;
+                    nodeElement.style.top = `${nodeData.position.y}px`;
+                    
+                    const labelElement = document.createElement('div');
+                    labelElement.className = 'node__label';
+                    labelElement.textContent = nodeData.label;
+                    
+                    const timescaleElement = document.createElement('div');
+                    timescaleElement.className = 'node__timescale';
+                    timescaleElement.textContent = nodeData.timescale;
+                    
+                    nodeElement.appendChild(labelElement);
+                    nodeElement.appendChild(timescaleElement);
+                    
+                    nodeElement.addEventListener('click', () => {
+                        this.selectNode(nodeData);
+                    });
+                    
+                    nodeElement.addEventListener('mouseenter', () => {
+                        nodeElement.style.transform = 'scale(1.05)';
+                    });
+                    
+                    nodeElement.addEventListener('mouseleave', () => {
+                        if (state.selectedNode !== nodeData) {
+                            nodeElement.style.transform = 'scale(1)';
+                        }
+                    });
+                    
+                    this.container.appendChild(nodeElement);
+                    this.nodeElements.set(nodeData.id, nodeElement);
+                });
+            }
+            
+            createLinks() {
+                NETWORK_DATA.links.forEach(linkData => {
+                    const sourceNode = NETWORK_DATA.nodes.find(n => n.id === linkData.source);
+                    const targetNode = NETWORK_DATA.nodes.find(n => n.id === linkData.target);
+                    
+                    if (sourceNode && targetNode) {
+                        const linkElement = document.createElement('div');
+                        linkElement.className = 'link';
+                        linkElement.style.display = 'block'; // Ensure visibility
+                        linkElement.style.zIndex = '10'; // Ensure above other elements
+                        
+                        // Using only small green arrows via CSS ::after pseudo-element
+                        this.updateLinkPosition(linkElement, null, sourceNode, targetNode);
+                        
+                        this.container.appendChild(linkElement);
+                        
+                        this.linkElements.push({ link: linkElement, arrow: null, data: linkData });
+                        
+                        console.log(`Created link: ${linkData.source} → ${linkData.target}`); // Debug log
+                        console.log('Link element:', linkElement);
+                        console.log('Link styles:', linkElement.style.cssText);
+                    }
+                });
+            }
+            
+            updateLinkPosition(linkElement, arrowElement, sourceNode, targetNode) {
+                console.log(`=== POSITIONING LINK: ${sourceNode.id} -> ${targetNode.id} ===`);
+                console.log('Source node:', sourceNode);
+                console.log('Target node:', targetNode);
+                
+                // Simple positioning - connect node centers
+                const sourceX = sourceNode.position.x + 50; // Center of node
+                const sourceY = sourceNode.position.y + 30; // Center of node
+                const targetX = targetNode.position.x + 50;
+                const targetY = targetNode.position.y + 30;
+                
+                const dx = targetX - sourceX;
+                const dy = targetY - sourceY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                console.log(`Source center: (${sourceX}, ${sourceY})`);
+                console.log(`Target center: (${targetX}, ${targetY})`);
+                console.log(`Distance: ${distance}, Angle: ${angle}`);
+                
+                // Position the link line
+                linkElement.style.left = `${sourceX}px`;
+                linkElement.style.top = `${sourceY}px`;
+                linkElement.style.width = `${distance}px`;
+                linkElement.style.transform = `rotate(${angle}deg)`;
+                linkElement.style.display = 'block';
+                linkElement.style.visibility = 'visible';
+                
+                console.log('Final link styles:', linkElement.style.cssText);
+                console.log('Link element:', linkElement);
+            }
+            
+            selectNode(nodeData) {
+                // Remove previous selection
+                if (state.selectedNode) {
+                    const prevElement = this.nodeElements.get(state.selectedNode.id);
+                    if (prevElement) {
+                        prevElement.classList.remove('selected');
+                    }
+                }
+                
+                // Select new node
+                state.selectedNode = nodeData;
+                const nodeElement = this.nodeElements.get(nodeData.id);
+                if (nodeElement) {
+                    nodeElement.classList.add('selected');
+                }
+                
+                this.showNodeInfo(nodeData);
+            }
+            
+            showNodeInfo(nodeData) {
+                // Create a simple alert for now since the info panel doesn't exist
+                let content = `${nodeData.label}\n\n`;
+                content += `Definition: ${nodeData.definition}\n`;
+                content += `Timescale: ${nodeData.timescale}\n`;
+                
+                if (nodeData.type === 'chance' && PROBABILITY_MODEL[nodeData.id]) {
+                    const model = PROBABILITY_MODEL[nodeData.id];
+                    content += `\nProbability Assumptions:\n`;
+                    content += `${model.description}\n`;
+                    Object.entries(model.probabilities).forEach(([outcome, prob]) => {
+                        content += `• ${outcome}: ${(prob * 100).toFixed(1)}%\n`;
+                    });
+                }
+                
+                if (nodeData.type === 'decision' && nodeData.options) {
+                    content += `\nDecision Options:\n`;
+                    nodeData.options.forEach(option => {
+                        content += `• ${option}\n`;
+                    });
+                }
+                
+                alert(content);
+            }
+            
+            hideNodeInfo() {
+                state.selectedNode = null;
+                
+                // Remove selection styling
+                this.nodeElements.forEach(element => {
+                    element.classList.remove('selected');
+                });
+            }
+            
+            resetLayout() {
+                // Animate nodes to their original positions
+                NETWORK_DATA.nodes.forEach(nodeData => {
+                    const nodeElement = this.nodeElements.get(nodeData.id);
+                    if (nodeElement) {
+                        nodeElement.style.transition = 'all 0.5s ease';
+                        nodeElement.style.left = `${nodeData.position.x}px`;
+                        nodeElement.style.top = `${nodeData.position.y}px`;
+                        nodeElement.style.transform = 'scale(1)';
+                    }
+                });
+                
+                // Update links
+                setTimeout(() => {
+                    this.linkElements.forEach(({ link, arrow, data }) => {
+                        const sourceNode = NETWORK_DATA.nodes.find(n => n.id === data.source);
+                        const targetNode = NETWORK_DATA.nodes.find(n => n.id === data.target);
+                        this.updateLinkPosition(link, arrow, sourceNode, targetNode);
+                    });
+                }, 100);
+            }
+            
+            toggleLabels() {
+                state.showLabels = !state.showLabels;
+                this.nodeElements.forEach(element => {
+                    const timescaleElement = element.querySelector('.node__timescale');
+                    if (timescaleElement) {
+                        timescaleElement.style.display = state.showLabels ? 'block' : 'none';
+                    }
+                });
+            }
+            
+            toggleLinks() {
+                state.showLinks = !state.showLinks;
+                this.linkElements.forEach(({ link, arrow }) => {
+                    const displayValue = state.showLinks ? 'block' : 'none';
+                    link.style.display = displayValue;
+                    link.style.visibility = state.showLinks ? 'visible' : 'hidden';
+                    // Arrows are now handled by CSS ::after pseudo-element
+                });
+            }
+            
+            takeScreenshot() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Draw background
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw nodes
+                this.nodeElements.forEach(element => {
+                    const rect = element.getBoundingClientRect();
+                    const color = getComputedStyle(element).backgroundColor;
+                    ctx.fillStyle = color;
+                    ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
+                });
+                
+                // Download
+                const link = document.createElement('a');
+                link.download = 'glaucoma-bn-2d.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+            
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+            
+            setupEventListeners() {
+                // Control buttons
+                document.getElementById('resetLayout').addEventListener('click', () => {
+                    this.resetLayout();
+                });
+                
+                document.getElementById('toggleLabels').addEventListener('click', () => {
+                    this.toggleLabels();
+                });
+                
+                document.getElementById('toggleLinks').addEventListener('click', () => {
+                    this.toggleLinks();
+                });
+                
+                document.getElementById('interactiveMode').addEventListener('click', () => {
+                    this.toggleInteractiveMode();
+                });
+                
+                document.getElementById('scenarioMode').addEventListener('click', () => {
+                    this.showScenarioModal();
+                });
+                
+                document.getElementById('screenshot').addEventListener('click', () => {
+                    this.takeScreenshot();
+                });
+                
+                document.getElementById('fullscreen').addEventListener('click', () => {
+                    this.toggleFullscreen();
+                });
+                
+                // Interactive panel controls
+                this.setupInteractiveControls();
+                
+                // Note: closeInfo button doesn't exist, so we removed this event listener
+                
+                // Click outside to deselect
+                this.container.addEventListener('click', (event) => {
+                    if (event.target === this.container) {
+                        this.hideNodeInfo();
+                    }
+                });
+            }
+            
+            setupInteractiveControls() {
+                // Age slider
+                const ageSlider = document.getElementById('ageSlider');
+                const ageValue = document.getElementById('ageValue');
+                ageSlider.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    ageValue.textContent = value + '%';
+                    state.currentScenario.ageRisk = parseInt(value);
+                    this.updateProbabilities();
+                });
+                
+                // IOP slider
+                const iopSlider = document.getElementById('iopSlider');
+                const iopValue = document.getElementById('iopValue');
+                iopSlider.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    iopValue.textContent = value + '%';
+                    state.currentScenario.iopLevel = parseInt(value);
+                    this.updateProbabilities();
+                });
+                
+                // Treatment buttons
+                document.querySelectorAll('.treatment-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.treatment-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        state.currentScenario.treatment = e.target.dataset.treatment;
+                        this.updateProbabilities();
+                    });
+                });
+                
+                // Panel controls
+                document.getElementById('closePanel').addEventListener('click', () => {
+                    this.toggleInteractiveMode();
+                });
+                
+                document.getElementById('saveScenario').addEventListener('click', () => {
+                    this.saveScenario();
+                });
+                
+                document.getElementById('compareScenarios').addEventListener('click', () => {
+                    this.showScenarioModal();
+                });
+                
+                // Modal controls
+                document.getElementById('closeModal').addEventListener('click', () => {
+                    document.getElementById('scenarioModal').style.display = 'none';
+                });
+            }
+            
+            toggleInteractiveMode() {
+                state.interactiveMode = !state.interactiveMode;
+                const panel = document.getElementById('interactivePanel');
+                const btn = document.getElementById('interactiveMode');
+                
+                if (state.interactiveMode) {
+                    panel.style.display = 'block';
+                    btn.textContent = 'Exit Interactive';
+                    btn.style.background = 'var(--primary)';
+                    btn.style.color = 'var(--white)';
+                } else {
+                    panel.style.display = 'none';
+                    btn.textContent = 'Interactive';
+                    btn.style.background = 'var(--white)';
+                    btn.style.color = 'var(--gray-700)';
+                }
+            }
+            
+            updateProbabilities() {
+                // Simplified Bayesian inference calculation
+                const { ageRisk, iopLevel, treatment } = state.currentScenario;
+                
+                // Calculate vision loss risk based on inputs
+                let baseRisk = (ageRisk * 0.3) + (iopLevel * 0.4);
+                
+                // Adjust based on treatment
+                const treatmentEffect = {
+                    'monitor': 1.0,
+                    'drops': 0.6,
+                    'surgery': 0.3
+                };
+                
+                baseRisk *= treatmentEffect[treatment] || 1.0;
+                
+                // Calculate treatment success
+                const treatmentSuccess = Math.max(20, 100 - baseRisk);
+                
+                // Update display
+                document.getElementById('visionLossRisk').textContent = Math.round(baseRisk) + '%';
+                document.getElementById('treatmentSuccess').textContent = Math.round(treatmentSuccess) + '%';
+                
+                // Update scenario
+                state.currentScenario.visionLossRisk = Math.round(baseRisk);
+                state.currentScenario.treatmentSuccess = Math.round(treatmentSuccess);
+                
+                // Animate node updates
+                this.animateNodeUpdates();
+            }
+            
+            animateNodeUpdates() {
+                // Add visual feedback to show probability updates
+                const nodes = ['Visual_Field_Loss', 'U_Vision', 'U_Comfort', 'U_Cost'];
+                nodes.forEach(nodeId => {
+                    const nodeElement = this.nodeElements.get(nodeId);
+                    if (nodeElement) {
+                        nodeElement.style.transform = 'scale(1.1)';
+                        setTimeout(() => {
+                            nodeElement.style.transform = 'scale(1)';
+                        }, 300);
+                    }
+                });
+            }
+            
+            saveScenario() {
+                const scenario = {
+                    id: Date.now(),
+                    name: `Scenario ${state.savedScenarios.length + 1}`,
+                    ...state.currentScenario,
+                    timestamp: new Date().toLocaleTimeString()
+                };
+                
+                state.savedScenarios.push(scenario);
+                
+                // Show feedback
+                const btn = document.getElementById('saveScenario');
+                const originalText = btn.textContent;
+                btn.textContent = 'Saved!';
+                btn.style.background = 'var(--success)';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = 'var(--white)';
+                }, 1000);
+            }
+            
+            showScenarioModal() {
+                const modal = document.getElementById('scenarioModal');
+                const grid = document.getElementById('scenarioGrid');
+                
+                if (state.savedScenarios.length === 0) {
+                    grid.innerHTML = '<p>No scenarios saved yet. Use the Interactive mode to create scenarios.</p>';
+                } else {
+                    grid.innerHTML = state.savedScenarios.map(scenario => `
+                        <div class="scenario-card">
+                            <h4>${scenario.name}</h4>
+                            <div class="scenario-stats">
+                                <div>Age Risk: ${scenario.ageRisk}%</div>
+                                <div>IOP Level: ${scenario.iopLevel}%</div>
+                                <div>Treatment: ${scenario.treatment}</div>
+                                <div>Vision Loss Risk: ${scenario.visionLossRisk}%</div>
+                                <div>Treatment Success: ${scenario.treatmentSuccess}%</div>
+                                <div>Saved: ${scenario.timestamp}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                modal.style.display = 'flex';
+            }
+            
+            hideLoading() {
+                const loadingElement = document.getElementById('loading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                    console.log('Loading hidden successfully');
+                } else {
+                    console.warn('Loading element not found');
+                }
+            }
+        }
+
+        // === INITIALIZATION ===
+        
+        // === MOBILE INTERACTION FEATURES ===
+        function addMobileInteractions() {
+            if (!state.isMobile) return;
+            
+            // Add touch events to nodes
+            document.addEventListener('touchstart', (e) => {
+                if (e.target.classList.contains('node')) {
+                    e.target.classList.add('touched');
+                    setTimeout(() => e.target.classList.remove('touched'), 300);
+                }
+            });
+            
+            // Add pinch-to-zoom for canvas
+            let lastTouchDistance = 0;
+            document.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    const distance = Math.sqrt(
+                        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+                        Math.pow(touch2.clientY - touch1.clientY, 2)
+                    );
+                    
+                    if (lastTouchDistance > 0) {
+                        const scale = distance / lastTouchDistance;
+                        const canvas = document.getElementById('graph2d');
+                        if (canvas) {
+                            const currentTransform = canvas.style.transform || 'scale(1)';
+                            const currentScale = parseFloat(currentTransform.match(/scale\(([^)]+)\)/)?.[1] || '1');
+                            const newScale = Math.max(0.5, Math.min(3, currentScale * scale));
+                            canvas.style.transform = `scale(${newScale})`;
+                        }
+                    }
+                    lastTouchDistance = distance;
+                }
+            });
+            
+            document.addEventListener('touchend', () => {
+                lastTouchDistance = 0;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new GlaucomaVisualization();
+            
+            // Add mobile interactions
+            addMobileInteractions();
+            
+            // Fallback: Force hide loading after 2 seconds
+            setTimeout(() => {
+                const loading = document.getElementById('loading');
+                if (loading) {
+                    loading.style.display = 'none';
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
